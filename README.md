@@ -1,1 +1,1 @@
-# Name-blog-seo-analyzer
+blog-seo-analyzer
