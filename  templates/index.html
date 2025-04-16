@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>Blog SEO Analyzer</title>
+  <style>
+    body { font-family: Arial; margin: 40px; background: #f9f9f9; }
+    textarea { width: 100%; height: 200px; }
+    input, textarea, button { margin-top: 10px; padding: 10px; }
+    .result { margin-top: 20px; padding: 15px; background: #e0ffe0; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h2>تحليل SEO للمقالات</h2>
+  <form method="post">
+    <label>المقال:</label><br>
+    <textarea name="article" required></textarea><br>
+    <label>الكلمة المفتاحية:</label><br>
+    <input type="text" name="keyword" required><br>
+    <button type="submit">تحليل</button>
+  </form>
+
+  {% if result %}
+  <div class="result">
+    <p><strong>عدد الكلمات:</strong> {{ result.total_words }}</p>
+    <p><strong>عدد مرات ظهور الكلمة "{{ result.keyword }}":</strong> {{ result.keyword_count }}</p>
+    <p><strong>كثافة الكلمة المفتاحية:</strong> {{ result.density }}%</p>
+  </div>
+  {% endif %}
+</body>
+</html>
