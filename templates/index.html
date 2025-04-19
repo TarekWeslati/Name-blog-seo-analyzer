@@ -2,52 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SEO Article Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Blog Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
+            font-family: 'Inter', sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 0;
         }
-        textarea, input[type="text"] {
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        h1 {
+            text-align: center;
+            color: #222;
+        }
+        textarea {
             width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            box-sizing: border-box;
-        }
-        input[type="submit"] {
-            padding: 10px 20px;
-            margin-top: 10px;
-        }
-        .result {
-            background-color: #f0f0f0;
+            height: 200px;
             padding: 15px;
             margin-top: 20px;
-            border-left: 5px solid #007BFF;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .results h2 {
+            color: #333;
+        }
+        .result-box {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
-    <h1>SEO Analyzer for Blog Articles</h1>
-    <form method="POST">
-        <label for="keyword">Target Keyword:</label>
-        <input type="text" name="keyword" id="keyword" required>
+    <div class="container">
+        <h1>Blog SEO Analyzer</h1>
+        <form method="POST">
+            <textarea name="article" placeholder="Paste your blog article here..." required></textarea>
+            <button type="submit">Analyze</button>
+        </form>
 
-        <label for="article">Paste Your Article Here:</label>
-        <textarea name="article" id="article" rows="10" required></textarea>
+        {% if result %}
+        <div class="results">
+            <h2>SEO Analysis</h2>
+            <div class="result-box">
+                <strong>Total Words:</strong> {{ result.total_words }}<br>
+                <strong>Primary Keyword:</strong> {{ result.primary_kw }}<br>
+                <strong>Secondary Keywords:</strong> {{ result.secondary_kws|join(', ') }}<br>
+                <strong>Keyword Density:</strong> {{ result.density }}%<br>
+            </div>
 
-        <input type="submit" value="Analyze Article">
-    </form>
+            <h2>Suggested Headings</h2>
+            <div class="result-box">
+                <strong>H1:</strong> {{ result.headings.h1 }}<br>
+                <strong>H2:</strong> {{ result.headings.h2|join('<br>') }}<br>
+                <strong>H3:</strong> {{ result.headings.h3|join('<br>') }}
+            </div>
 
-    {% if result %}
-    <div class="result">
-        <h2>Analysis Results:</h2>
-        <p><strong>Total Words:</strong> {{ result.total_words }}</p>
-        <p><strong>Keyword:</strong> {{ result.keyword }}</p>
-        <p><strong>Keyword Occurrences:</strong> {{ result.keyword_count }}</p>
-        <p><strong>Keyword Density:</strong> {{ result.density }}%</p>
+            <h2>Rewritten Article</h2>
+            <div class="result-box">
+                {{ result.rewritten }}
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 </body>
 </html>
