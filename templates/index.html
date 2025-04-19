@@ -2,70 +2,65 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Blog SEO Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Blog SEO Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f8f8; }
-        h1 { color: #2c3e50; }
-        textarea { width: 100%; height: 200px; padding: 10px; }
-        .result { background-color: white; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .score { font-size: 20px; color: green; }
-        button { padding: 10px 15px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #2980b9; }
-        ul { padding-left: 20px; }
-        .section-title { color: #34495e; margin-top: 20px; }
+        body { background-color: #f8f9fa; padding-top: 50px; }
+        .container { max-width: 1000px; margin: auto; }
+        .highlight { color: #198754; font-weight: bold; }
+        .result-box { white-space: pre-wrap; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; }
+        textarea { min-height: 200px; }
     </style>
 </head>
 <body>
-    <h1>Blog SEO Analyzer</h1>
+<div class="container">
+    <h1 class="text-center text-primary mb-4">AI Blog SEO Analyzer</h1>
     <form method="post">
-        <label>Paste your blog article below:</label>
-        <textarea name="content" placeholder="Paste your article text here...">{{ content or '' }}</textarea>
-        <br><br>
-        <button type="submit">Analyze</button>
+        <div class="mb-3">
+            <label for="content" class="form-label">Paste your blog article below:</label>
+            <textarea class="form-control" id="content" name="content" placeholder="Paste your article here...">{{ content or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Analyze Now</button>
     </form>
 
     {% if content %}
-    <div class="result" id="analysis">
-        <h2>Analysis Results</h2>
-        <p><strong>Main Keyword:</strong> {{ main_keyword }}</p>
+    <hr>
+    <div class="result-box mt-4">
+        <h3>SEO Analysis</h3>
+        <p><strong>Main Keyword:</strong> <span class="highlight">{{ main_keyword }}</span></p>
         <p><strong>Secondary Keywords:</strong> {{ secondary_keywords | join(', ') }}</p>
         <p><strong>Keyword Density:</strong> {{ density }}%</p>
-        <p class="score"><strong>SEO Score:</strong> {{ score }}/100</p>
+        <p><strong>SEO Score:</strong> <span class="highlight">{{ score }}/100</span></p>
 
-        <div class="section-title">Suggested Headings:</div>
+        <h4>Suggested Headings</h4>
         <ul>
             <li><strong>H1:</strong> {{ h1 }}</li>
-            {% for h2 in h2_list %}
-            <li><strong>H2:</strong> {{ h2 }}</li>
-            {% endfor %}
-            {% for h3 in h3_list %}
-            <li><strong>H3:</strong> {{ h3 }}</li>
-            {% endfor %}
+            {% for h2 in h2_list %}<li><strong>H2:</strong> {{ h2 }}</li>{% endfor %}
+            {% for h3 in h3_list %}<li><strong>H3:</strong> {{ h3 }}</li>{% endfor %}
         </ul>
 
-        <div class="section-title">Suggestions to Improve:</div>
+        <h4>Improvement Suggestions</h4>
         <ul>
-            {% for tip in suggestions %}
-            <li>{{ tip }}</li>
-            {% endfor %}
+            {% for tip in suggestions %}<li>{{ tip }}</li>{% endfor %}
         </ul>
 
-        <div class="section-title">Rewritten Version:</div>
-        <p>{{ rewritten }}</p>
+        <h4>Rewritten Article (AI Enhanced)</h4>
+        <div class="bg-light p-3 border rounded">{{ rewritten }}</div>
 
-        <br>
-        <button onclick="copyAnalysis()">Copy Analysis</button>
-        <button onclick="window.print()">Download as PDF</button>
+        <div class="mt-3">
+            <button onclick="copyResult()" class="btn btn-outline-primary">Copy Analysis</button>
+            <button onclick="window.print()" class="btn btn-outline-secondary">Download as PDF</button>
+        </div>
     </div>
     {% endif %}
-
-    <script>
-        function copyAnalysis() {
-            const text = document.getElementById("analysis").innerText;
-            navigator.clipboard.writeText(text)
-                .then(() => alert("Analysis copied to clipboard!"))
-                .catch(err => alert("Failed to copy analysis."));
-        }
-    </script>
+</div>
+<script>
+    function copyResult() {
+        const text = document.querySelector('.result-box').innerText;
+        navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+    }
+</script>
 </body>
 </html>
