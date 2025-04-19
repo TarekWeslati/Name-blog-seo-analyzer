@@ -1,85 +1,101 @@
-from flask import Flask, render_template, request
-from collections import Counter
+import openai
 import re
-import random
+from flask import Flask, render_template, request
+import os
+
+# إعداد API Key لـ OpenAI (تأكد من أنك أضفت مفتاح OpenAI في بيئة التشغيل)
+openai.api_key = "YOUR_OPENAI_API_KEY"
 
 app = Flask(__name__)
 
-def extract_keywords(text):
-    words = re.findall(r'\b\w+\b', text.lower())
-    stop_words = set(['the', 'and', 'to', 'of', 'in', 'a', 'is', 'it', 'for', 'on', 'with', 'that', 'this'])
-    filtered_words = [w for w in words if w not in stop_words and len(w) > 3]
-    freq = Counter(filtered_words)
-    common = freq.most_common(5)
-    return [kw for kw, _ in common]
+# دالة تحليل السيو
+def seo_analysis(content):
+    # استخراج الكلمة الرئيسية
+    main_keyword = extract_main_keyword(content)
+    # استخراج الكلمات الثانوية
+    secondary_keywords = extract_secondary_keywords(content)
+    # حساب كثافة الكلمات المفتاحية
+    density = calculate_keyword_density(content, main_keyword)
+    # تقديم العناوين H1، H2، H3
+    headings = suggest_headings(content)
+    # حساب درجة سيو بسيطة
+    score = calculate_seo_score(content, main_keyword)
 
-def keyword_density(text, keyword):
-    words = re.findall(r'\b\w+\b', text.lower())
-    return round((words.count(keyword.lower()) / len(words)) * 100, 2) if words else 0
-
-def seo_score(text, main_keyword):
-    score = 0
-    word_count = len(re.findall(r'\b\w+\b', text))
-    if word_count >= 300:
-        score += 30
-    density = keyword_density(text, main_keyword)
-    if 1 <= density <= 3:
-        score += 30
-    if text.count('\n') >= 3:
-        score += 20
-    if any(h in text.lower() for h in ['introduction', 'conclusion']):
-        score += 20
-    return score
-
-def suggest_headings(text):
-    lines = text.split('\n')
-    h1 = lines[0] if lines else 'Main Title'
-    h2 = lines[1:3]
-    h3 = lines[3:6]
-    return h1.strip(), [h.strip() for h in h2], [h.strip() for h in h3]
-
-def suggest_improvements(text, keyword):
+    # تحسينات مقترحة (مثال بسيط)
     suggestions = []
-    if keyword_density(text, keyword) < 1.0:
-        suggestions.append("Increase the usage of the main keyword.")
-    if len(text.split()) < 300:
-        suggestions.append("The article is too short. Try expanding your content.")
-    if '\n' not in text:
-        suggestions.append("Use headings to structure your content.")
-    if not any(tag in text.lower() for tag in ['h1', 'h2', 'h3']):
-        suggestions.append("Consider adding heading tags like H1, H2, H3.")
-    return suggestions
+    if density < 1.5:
+        suggestions.append("Increase the keyword density for better SEO.")
+    if len(headings['h1']) == 0:
+        suggestions.append("Consider adding a clear H1 tag.")
 
-def rewrite_article(text):
-    # Simplified pseudo-rewriter for now
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-    rewritten = ["In summary, " + s if i % 2 == 0 else "Moreover, " + s for i, s in enumerate(sentences)]
-    return " ".join(rewritten)
+    return {
+        "main_keyword": main_keyword,
+        "secondary_keywords": secondary_keywords,
+        "density": density,
+        "headings": headings,
+        "score": score,
+        "suggestions": suggestions
+    }
 
-@app.route('/', methods=['GET', 'POST'])
+# دالة استخراج الكلمة الرئيسية
+def extract_main_keyword(content):
+    # من الممكن تحسين هذا بإضافة خوارزميات متقدمة
+    words = content.split()
+    most_frequent = max(set(words), key = words.count)
+    return most_frequent
+
+# دالة استخراج الكلمات الثانوية
+def extract_secondary_keywords(content):
+    # هنا يمكن استخدام أدوات أكثر تطورًا لاستخراج الكلمات الثانوية
+    return ["example", "secondary", "keyword"]
+
+# دالة حساب كثافة الكلمات
+def calculate_keyword_density(content, keyword):
+    words = content.split()
+    keyword_count = words.count(keyword)
+    return (keyword_count / len(words)) * 100
+
+# دالة اقتراح العناوين
+def suggest_headings(content):
+    # باستخدام قاعدة بيانات بسيطة للعناوين
+    headings = {
+        "h1": "Blog SEO Best Practices",
+        "h2": ["Keyword Strategy", "Content Optimization"],
+        "h3": ["How to Choose Keywords", "Avoid Keyword Stuffing"]
+    }
+    return headings
+
+# دالة حساب درجة السيو
+def calculate_seo_score(content, main_keyword):
+    density = calculate_keyword_density(content, main_keyword)
+    return min(int(density * 2), 100)
+
+# دالة لإعادة صياغة المقال باستخدام OpenAI API
+def rewrite_article_with_ai(text):
+    try:
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=f"Rewrite the following article to improve clarity and readability:\n\n{text}",
+            max_tokens=1500
+        )
+        rewritten_text = response.choices[0].text.strip()
+        return rewritten_text
+    except Exception as e:
+        print(f"Error in OpenAI API: {e}")
+        return text  # إذا حدث خطأ، نعيد النص كما هو
+
+# الصفحة الرئيسية
+@app.route("/", methods=["GET", "POST"])
 def index():
-    if request.method == 'POST':
-        content = request.form['content']
-        main_keyword = extract_keywords(content)[0] if extract_keywords(content) else "N/A"
-        secondary_keywords = extract_keywords(content)[1:4]
-        density = keyword_density(content, main_keyword)
-        score = seo_score(content, main_keyword)
-        h1, h2_list, h3_list = suggest_headings(content)
-        suggestions = suggest_improvements(content, main_keyword)
-        rewritten = rewrite_article(content)
-        
-        return render_template('index.html',
-                               content=content,
-                               main_keyword=main_keyword,
-                               secondary_keywords=secondary_keywords,
-                               density=density,
-                               score=score,
-                               h1=h1,
-                               h2_list=h2_list,
-                               h3_list=h3_list,
-                               suggestions=suggestions,
-                               rewritten=rewritten)
-    return render_template('index.html')
+    content = request.form.get("content")
+    seo_results = None
+    rewritten_article = ""
+    
+    if content:
+        seo_results = seo_analysis(content)
+        rewritten_article = rewrite_article_with_ai(content)
 
-if __name__ == '__main__':
+    return render_template("index.html", content=content, rewritten=rewritten_article, **seo_results)
+
+if __name__ == "__main__":
     app.run(debug=True)
