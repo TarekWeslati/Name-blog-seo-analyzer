@@ -1,37 +1,31 @@
-from flask import Flask, render_template, request
+from flask import Flask, request, render_template
 import re
+import os
 
 app = Flask(__name__)
 
-def count_words(text):
-    words = re.findall(r'\w+', text)
-    return len(words)
-
-def keyword_density(text, keyword):
-    words = re.findall(r'\w+', text.lower())
-    total_words = len(words)
-    keyword_count = words.count(keyword.lower())
-    density = (keyword_count / total_words) * 100 if total_words > 0 else 0
-    return keyword_count, round(density, 2)
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST', 'HEAD'])
 def index():
+    if request.method == 'HEAD':
+        return '', 200  # رد فارغ للطلبات من نوع HEAD
+
     result = None
     if request.method == 'POST':
         article = request.form['article']
         keyword = request.form['keyword']
-        total_words = count_words(article)
-        keyword_count, density = keyword_density(article, keyword)
+        total_words = len(article.split())
+        keyword_count = len(re.findall(re.escape(keyword), article, re.IGNORECASE))
+        density = round((keyword_count / total_words) * 100, 2) if total_words > 0 else 0
+
         result = {
             'total_words': total_words,
+            'keyword': keyword,
             'keyword_count': keyword_count,
-            'density': density,
-            'keyword': keyword
+            'density': density
         }
+
     return render_template('index.html', result=result)
 
 if __name__ == '__main__':
-    import os
-port = int(os.environ.get("PORT", 5000))
-app.run(host='0.0.0.0', port=port)
-
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
