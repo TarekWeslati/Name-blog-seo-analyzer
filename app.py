@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request
 import re
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
+# تحليل النص
 def analyze_text(content):
     word_count = len(content.split())
     keyword_suggestions = list(set(re.findall(r'\b\w{5,}\b', content)))[:10]
@@ -13,16 +14,33 @@ def analyze_text(content):
         'keywords': keyword_suggestions
     }
 
+# إعادة الصياغة (بدون OpenAI)
+def simple_rephrase(content):
+    words = content.split()
+    if len(words) > 10:
+        # إعادة ترتيب الجمل بشكل بسيط لتغيير هيكل النص
+        words = words[::-1]  # هذا هو المثال الأبسط: عكس ترتيب الكلمات
+    return ' '.join(words)
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     analysis = {}
     blog_content = ""
+    rephrased_content = ""
 
     if request.method == "POST":
         blog_content = request.form.get("blogContent", "")
+        action = request.form.get("action", "")
+
+        # تحليل النص
         analysis = analyze_text(blog_content)
 
-    return render_template("index.html", blogContent=blog_content, analysis=analysis)
+        # إعادة الصياغة إذا تم اختيار ذلك
+        if action == "rephrase":
+            rephrased_content = simple_rephrase(blog_content)
+
+    return render_template("index.html", blogContent=blog_content, analysis=analysis, rephrased_content=rephrased_content)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(debug=True)
+    
