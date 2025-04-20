@@ -1,50 +1,91 @@
-from flask import Flask, render_template, request, jsonify
-from collections import Counter
+from flask import Flask, request, jsonify
 import re
+from collections import Counter
 
 app = Flask(__name__)
 
-def extract_keywords(text):
-    words = re.findall(r'\b\w+\b', text.lower())
-    stopwords = set(['the', 'is', 'in', 'and', 'to', 'a', 'of', 'for', 'on', 'with', 'as', 'this', 'that'])
-    filtered_words = [word for word in words if word not in stopwords and len(word) > 2]
-    return Counter(filtered_words).most_common(10)
+# Helper function to analyze SEO
+def analyze_seo(content):
+    word_count = len(content.split())
+    keyword_density = {}
+    
+    # Remove unwanted characters for analysis
+    content = re.sub(r'[^\w\s]', '', content.lower())
+    
+    # Calculate word frequency
+    word_freq = Counter(content.split())
+    
+    # Calculate keyword density
+    for word, freq in word_freq.items():
+        keyword_density[word] = (freq / word_count) * 100
+    
+    return {
+        "word_count": word_count,
+        "keyword_density": keyword_density
+    }
 
-def suggest_headings(text):
-    sentences = re.split(r'[.!?]', text)
-    return [s.strip().capitalize() for s in sentences if len(s.strip()) > 20][:5]
+# Function to suggest keywords based on content
+def suggest_keywords(content):
+    # Here you can add logic for extracting keyword ideas or integrating with Google Trends API
+    return {
+        "suggested_keywords": [
+            "SEO tips", "keyword optimization", "content marketing", "blog SEO", "backlink strategies"
+        ]
+    }
 
-def seo_tips(text):
-    word_count = len(re.findall(r'\b\w+\b', text))
-    keyword_suggestions = extract_keywords(text)
-    tips = []
-    if word_count < 300:
-        tips.append("Increase your content length to at least 300 words.")
-    if len(keyword_suggestions) == 0:
-        tips.append("Add relevant keywords to improve SEO.")
-    else:
-        tips.append("Ensure keywords are included in title, headers, and first paragraph.")
-    return tips
+# Function to suggest headings based on content
+def suggest_headings(content):
+    return {
+        "suggested_headings": [
+            "Introduction to SEO",
+            "How to Optimize Your Blog for Search Engines",
+            "Top SEO Techniques for Bloggers",
+            "Common SEO Mistakes to Avoid"
+        ]
+    }
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# Function to generate SEO tips
+def seo_tips():
+    return {
+        "seo_tips": [
+            "Use keywords in your titles and headings.",
+            "Ensure content is original and valuable.",
+            "Include high-quality outbound and inbound links.",
+            "Optimize for mobile and page speed."
+        ]
+    }
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    content = request.form['content']
-    word_count = len(re.findall(r'\b\w+\b', content))
-    keywords = extract_keywords(content)
-    headings = suggest_headings(content)
-    tips = seo_tips(content)
+    data = request.get_json()
+    content = data.get('content', '')
+    if content:
+        seo_analysis = analyze_seo(content)
+        return jsonify(seo_analysis)
+    return jsonify({"error": "No content provided."}), 400
 
-    response = {
-        'word_count': word_count,
-        'keywords': keywords,
-        'headings': headings,
-        'tips': tips,
-    }
-    return jsonify(response)
+@app.route('/keywords', methods=['POST'])
+def keywords():
+    data = request.get_json()
+    content = data.get('content', '')
+    if content:
+        keywords = suggest_keywords(content)
+        return jsonify(keywords)
+    return jsonify({"error": "No content provided."}), 400
+
+@app.route('/headings', methods=['POST'])
+def headings():
+    data = request.get_json()
+    content = data.get('content', '')
+    if content:
+        headings = suggest_headings(content)
+        return jsonify(headings)
+    return jsonify({"error": "No content provided."}), 400
+
+@app.route('/tips', methods=['POST'])
+def tips():
+    tips = seo_tips()
+    return jsonify(tips)
 
 if __name__ == '__main__':
     app.run(debug=True)
