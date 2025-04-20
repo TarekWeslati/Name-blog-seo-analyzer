@@ -1,67 +1,74 @@
-import openai
 from flask import Flask, render_template, request
-import os
-from pytrends.request import TrendReq
-
-# إعداد مفتاح API من OpenAI
-openai.api_key = "YOUR_OPENAI_API_KEY"  # ضع هنا مفتاح OpenAI الخاص بك
+from collections import Counter
+import re
 
 app = Flask(__name__)
 
-# إعداد Pytrends
-pytrends = TrendReq(hl='ar', tz=360)
-
-# دالة لإعادة صياغة النص باستخدام OpenAI
-def rephrase_text(text):
-    try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=f"إعادة صياغة النص التالي بشكل أفضل:\n\n{text}",
-            max_tokens=1000
-        )
-        return response.choices[0].text.strip()  # إعادة النص المعاد صياغته
-    except Exception as e:
-        return f"خطأ في الاتصال بـ OpenAI: {str(e)}"
-
-# دالة لتحليل سيو النص
+# أداة تحليل سيو المقال
 def analyze_text(text):
-    word_count = len(text.split())
-    fluff_percentage = 0
-    keywords = extract_keywords_from_trends(text)  # استخراج الكلمات المفتاحية من تريند
+    words = re.findall(r'\b\w+\b', text.lower())
+    word_count = len(words)
+    keyword_freq = Counter(words).most_common(10)
+    fluff_words = [w for w in words if len(w) <= 2 or w in ['the', 'and', 'for', 'with']]
+    fluff_ratio = round(len(fluff_words) / word_count * 100, 2) if word_count else 0
+    return word_count, keyword_freq, fluff_ratio
+
+# إقتراح عناوين H1 و H2 و H3 بناء على المحتوى
+
+def suggest_headings(text):
+    lines = text.split(". ")
+    if len(lines) < 3:
+        return {"h1": "Main Title", "h2": [], "h3": []}
     return {
-        "word_count": word_count,
-        "fluff": fluff_percentage,
-        "keywords": keywords
+        "h1": lines[0][:60],
+        "h2": [l[:50] for l in lines[1:3]],
+        "h3": [l[:40] for l in lines[3:6]]
     }
 
-# دالة لاستخراج الكلمات المفتاحية من جوجل تريند
-def extract_keywords_from_trends(text):
-    pytrends.build_payload([text], cat=0, timeframe='now 1-d', geo='US', gprop='')
-    related_queries = pytrends.related_queries()
-    
-    if text in related_queries:
-        return related_queries[text]['top'].head(5).to_dict()['query']
-    return ["لا توجد كلمات مفتاحية مرتبطة بهذا النص"]
+# إقتراح أماكن توزيع الكلمات المفتاحية
 
-@app.route("/", methods=["GET", "POST"])
+def keyword_placement_suggestions(keywords):
+    suggestions = []
+    if keywords:
+        main_kw = keywords[0][0]
+        suggestions.append(f"ضع الكلمة المفتاحية الرئيسية '{main_kw}' في العنوان الرئيسي h1.")
+        suggestions.append(f"أدرج '{main_kw}' في أول فقرة وفي الوسوم ALT للصور.")
+        for i, (kw, _) in enumerate(keywords[1:4], 1):
+            suggestions.append(f"استخدم الكلمة '{kw}' مرة واحدة على الأقل في عنوان فرعي h2 أو h3.")
+    return suggestions
+
+# نصائح عامة لسيو المقال
+
+def seo_tips(word_count, fluff_ratio):
+    tips = []
+    if word_count < 300:
+        tips.append("المقال قصير جداً، حاول كتابة أكثر من 300 كلمة.")
+    if fluff_ratio > 30:
+        tips.append("نسبة الحشو مرتفعة، حاول تقليل الكلمات غير المفيدة.")
+    tips.append("استخدم روابط داخلية وخارجية لتحسين السيو.")
+    tips.append("احرص على تنسيق المقال بالعناوين والصور.")
+    return tips
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    blog_content = ""
-    analysis = None
-    rephrased_content = None
+    analysis = {}
+    if request.method == 'POST':
+        text = request.form['content']
+        word_count, keyword_freq, fluff_ratio = analyze_text(text)
+        headings = suggest_headings(text)
+        placements = keyword_placement_suggestions(keyword_freq)
+        tips = seo_tips(word_count, fluff_ratio)
 
-    if request.method == "POST":
-        blog_content = request.form.get("blogContent")
-        action = request.form.get("action")
+        analysis = {
+            'word_count': word_count,
+            'keywords': keyword_freq,
+            'fluff_ratio': fluff_ratio,
+            'headings': headings,
+            'placements': placements,
+            'tips': tips,
+        }
 
-        # تحليل النص إذا تم إرساله
-        if blog_content:
-            analysis = analyze_text(blog_content)
+    return render_template('index.html', analysis=analysis)
 
-        # إذا كان المستخدم يريد إعادة الصياغة
-        if action == "rephrase" and blog_content:
-            rephrased_content = rephrase_text(blog_content)
-
-    return render_template("index.html", blogContent=blog_content, analysis=analysis, rephrased_content=rephrased_content)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
