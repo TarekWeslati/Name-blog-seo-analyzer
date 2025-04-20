@@ -3,62 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog SEO Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>SEO Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { padding: 20px; background-color: #f8f9fa; }
-        .container { max-width: 900px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        textarea { min-height: 200px; }
+        .result-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+        }
+        .result-container ul {
+            list-style-type: none;
+        }
+        .result-container ul li {
+            padding: 5px 0;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h2 class="mb-4 text-center">Blog SEO Analyzer</h2>
-    <form id="seoForm">
+    <div class="container">
+        <h1 class="text-center mt-5">SEO Analyzer</h1>
         <div class="mb-3">
-            <label for="content" class="form-label">Paste your blog article below:</label>
-            <textarea class="form-control" id="content" name="content" placeholder="Paste your blog content here..."></textarea>
+            <textarea id="content" class="form-control" rows="6" placeholder="Paste your text here..."></textarea>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-primary" onclick="submitAction('analyze')">Analyze SEO</button>
-            <button type="button" class="btn btn-success" onclick="submitAction('keywords')">Suggest Keywords</button>
-            <button type="button" class="btn btn-warning" onclick="submitAction('headings')">Suggest Headings</button>
-            <button type="button" class="btn btn-info" onclick="submitAction('tips')">SEO Tips</button>
-            <button type="button" class="btn btn-secondary" onclick="clearResults()">Clear Results</button>
+
+        <div class="text-center">
+            <button id="analyzeBtn" class="btn btn-primary m-2">Analyze Text</button>
+            <button id="keywordsBtn" class="btn btn-secondary m-2">Suggested Keywords</button>
+            <button id="headingsBtn" class="btn btn-success m-2">Suggested Headings</button>
+            <button id="tipsBtn" class="btn btn-warning m-2">SEO Tips</button>
         </div>
-    </form>
-    <hr>
-    <div id="resultArea" class="mt-4"></div>
-</div>
 
-<script>
-function submitAction(action) {
-    const content = document.getElementById('content').value;
-    if (!content.trim()) {
-        alert('Please paste some content.');
-        return;
-    }
+        <!-- Results Display -->
+        <div id="seoResults" class="result-container">
+            <h3>SEO Results</h3>
+            <p><strong>Word Count:</strong> <span id="wordCount"></span></p>
+            <p><strong>Keyword Density:</strong></p>
+            <ul id="keywordDensity"></ul>
+        </div>
 
-    fetch(`/${action}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
-    })
-    .then(res => res.json())
-    .then(data => {
-        const resultDiv = document.getElementById('resultArea');
-        resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-    })
-    .catch(err => {
-        document.getElementById('resultArea').innerHTML = '<div class="alert alert-danger">Error: ' + err.message + '</div>';
-    });
-}
+        <div id="keywordsResults" class="result-container">
+            <h3>Suggested Keywords</h3>
+            <ul id="suggestedKeywords"></ul>
+        </div>
 
-function clearResults() {
-    document.getElementById('content').value = '';
-    document.getElementById('resultArea').innerHTML = '';
-}
-</script>
+        <div id="headingsResults" class="result-container">
+            <h3>Suggested Headings</h3>
+            <ul id="suggestedHeadings"></ul>
+        </div>
+
+        <div id="tipsResults" class="result-container">
+            <h3>SEO Tips</h3>
+            <ul id="seoTips"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Function to display SEO Results
+        function displaySeoResults(data) {
+            document.getElementById("seoResults").style.display = "block";
+            document.getElementById("wordCount").textContent = data.word_count;
+
+            let keywordDensityList = document.getElementById("keywordDensity");
+            keywordDensityList.innerHTML = '';
+            for (let keyword in data.keyword_density) {
+                let listItem = document.createElement("li");
+                listItem.textContent = `${keyword}: ${data.keyword_density[keyword].toFixed(2)}%`;
+                keywordDensityList.appendChild(listItem);
+            }
+        }
+
+        // Function to display Suggested Keywords
+        function displayKeywords(data) {
+            document.getElementById("keywordsResults").style.display = "block";
+
+            let keywordsList = document.getElementById("suggestedKeywords");
+            keywordsList.innerHTML = '';
+            data.suggested_keywords.forEach(keyword => {
+                let listItem = document.createElement("li");
+                listItem.textContent = keyword;
+                keywordsList.appendChild(listItem);
+            });
+        }
+
+        // Function to display Suggested Headings
+        function displayHeadings(data) {
+            document.getElementById("headingsResults").style.display = "block";
+
+            let headingsList = document.getElementById("suggestedHeadings");
+            headingsList.innerHTML = '';
+            data.suggested_headings.forEach(heading => {
+                let listItem = document.createElement("li");
+                listItem.textContent = heading;
+                headingsList.appendChild(listItem);
+            });
+        }
+
+        // Function to display SEO Tips
+        function displayTips(data) {
+            document.getElementById("tipsResults").style.display = "block";
+
+            let tipsList = document.getElementById("seoTips");
+            tipsList.innerHTML = '';
+            data.seo_tips.forEach(tip => {
+                let listItem = document.createElement("li");
+                listItem.textContent = tip;
+                tipsList.appendChild(listItem);
+            });
+        }
+
+        // Event listeners for buttons
+        document.getElementById('analyzeBtn').addEventListener('click', function() {
+            let content = document.getElementById('content').value;
+
+            fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displaySeoResults(data);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('keywordsBtn').addEventListener('click', function() {
+            let content = document.getElementById('content').value;
+
+            fetch('/keywords', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayKeywords(data);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('headingsBtn').addEventListener('click', function() {
+            let content = document.getElementById('content').value;
+
+            fetch('/headings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayHeadings(data);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('tipsBtn').addEventListener('click', function() {
+            fetch('/tips', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayTips(data);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-    </html>
-    
+                                                </html>
+                                                
