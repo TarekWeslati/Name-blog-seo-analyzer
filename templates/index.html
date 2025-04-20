@@ -1,94 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog SEO Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>أداة تحليل سيو المقالات</title>
+    <!-- إضافة Bootstrap للتصميم -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { padding: 20px; }
-        .rtl { direction: rtl; text-align: right; }
-        .copy-btn, .pdf-btn { margin-right: 10px; }
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .card {
+            margin-top: 30px;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <h1 class="text-center mb-4">Blog SEO Analyzer</h1>
+    <h2 class="text-center">أداة تحليل سيو المقالات</h2>
 
-    <div class="mb-3">
-        <textarea id="blogContent" class="form-control" rows="10" placeholder="Paste your article here..."></textarea>
-    </div>
-    <div class="mb-3 text-end">
-        <button class="btn btn-primary" onclick="analyzeSEO()">Analyze</button>
-        <button class="btn btn-success copy-btn" onclick="copyResults()">Copy Results</button>
-        <button class="btn btn-danger pdf-btn" onclick="downloadPDF()">Export PDF</button>
-    </div>
+    <!-- نموذج إدخال النص -->
+    <form method="POST">
+        <div class="mb-3">
+            <label for="blogContent" class="form-label">أدخل نص المقال:</label>
+            <textarea class="form-control" id="blogContent" name="blogContent" rows="6" required>{{ blogContent }}</textarea>
+        </div>
 
-    <div id="results" class="mt-4"></div>
+        <button type="submit" class="btn btn-primary">تحليل النص</button>
+    </form>
+
+    <!-- عرض النتائج -->
+    {% if analysis %}
+    <div class="card result-box">
+        <h4>نتائج التحليل:</h4>
+        <ul>
+            <li><strong>عدد الكلمات:</strong> {{ analysis['word_count'] }}</li>
+            <li><strong>نسبة الحشو:</strong> {{ analysis['fluff'] }}%</li>
+            <li><strong>الكلمات المفتاحية المقترحة:</strong> 
+                <ul>
+                    {% for keyword in analysis['keywords'] %}
+                    <li>{{ keyword }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- إعادة صياغة النص -->
+    {% if rephrased_content %}
+    <div class="card result-box">
+        <h4>المقالة المعاد صياغتها:</h4>
+        <p>{{ rephrased_content }}</p>
+    </div>
+    {% endif %}
+
+    <!-- عرض الزر الخاص بإعادة الصياغة -->
+    <form method="POST">
+        <input type="hidden" name="blogContent" value="{{ blogContent }}">
+        <button type="submit" class="btn btn-secondary mt-3" name="action" value="rephrase">إعادة صياغة المقال</button>
+    </form>
 </div>
 
-<script>
-function analyzeSEO() {
-    const text = document.getElementById('blogContent').value;
-    if (!text) return;
+<!-- إضافة Bootstrap JS و Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
-    const words = text.split(/\s+/);
-    const wordCount = words.length;
-
-    const wordFreq = {};
-    words.forEach(word => {
-        const cleaned = word.toLowerCase().replace(/[^a-zA-Z0-9؀-ۿ]/g, '');
-        if (cleaned) wordFreq[cleaned] = (wordFreq[cleaned] || 0) + 1;
-    });
-
-    const sorted = Object.entries(wordFreq).sort((a,b) => b[1]-a[1]);
-    const keywordMain = sorted[0]?.[0] || 'N/A';
-    const secondary = sorted.slice(1,4).map(item => item[0]);
-
-    const sentences = text.split(/[.!؟]/).filter(s => s.length > 20);
-    const headings = sentences.slice(0, 3);
-
-    let html = `
-        <h4>Results:</h4>
-        <ul>
-            <li><strong>Word Count:</strong> ${wordCount}</li>
-            <li><strong>Main Keyword:</strong> ${keywordMain}</li>
-            <li><strong>Secondary Keywords:</strong> ${secondary.join(', ')}</li>
-        </ul>
-        <h5>Suggested Headings (H1, H2, H3):</h5>
-        <ul>
-            <li><strong>H1:</strong> ${headings[0] || '...'}</li>
-            <li><strong>H2:</strong> ${headings[1] || '...'}</li>
-            <li><strong>H3:</strong> ${headings[2] || '...'}</li>
-        </ul>
-        <h5>Improvement Tips:</h5>
-        <ul>
-            <li>${!text.includes(keywordMain) ? 'Add the main keyword to the first paragraph.' : 'Main keyword found early in the text.'}</li>
-            <li>${text.length < 300 ? 'Increase content length for better SEO.' : 'Good content length.'}</li>
-            <li>${(wordFreq[keywordMain] || 0) > 5 ? 'Reduce keyword repetition to avoid stuffing.' : 'Keyword density is acceptable.'}</li>
-        </ul>
-    `;
-
-    document.getElementById('results').innerHTML = html;
-    document.getElementById('results').classList.toggle('rtl', /[\u0600-\u06FF]/.test(text));
-}
-
-function copyResults() {
-    const results = document.getElementById('results').innerText;
-    navigator.clipboard.writeText(results).then(() => alert("Results copied to clipboard!"));
-}
-
-function downloadPDF() {
-    const content = document.getElementById('results').innerText;
-    const blob = new Blob([content], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'seo-analysis.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-</script>
 </body>
 </html>
