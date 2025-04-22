@@ -1,63 +1,177 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SEO Analyzer Tool</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-4 text-center">Smart SEO Analyzer</h1>
-
-    <textarea id="blogText" rows="10" class="w-full p-4 border rounded-md mb-4" placeholder="Paste your blog article here..."></textarea>
-
-    <div class="flex flex-wrap gap-2 justify-center mb-6">
-      <button onclick="analyzeSEO()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Analyze SEO</button>
-      <button onclick="suggestKeywords()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Suggest Keywords</button>
-      <button onclick="suggestHeadings()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Suggest Headings</button>
-      <button onclick="keywordPlacement()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">Keyword Placement</button>
-      <button onclick="seoTips()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">SEO Tips</button>
-    </div>
-
-    <div id="resultBox" class="bg-white shadow-md p-4 rounded border border-gray-200">
-      <h2 class="text-xl font-semibold mb-2">Results:</h2>
-      <div id="results" class="whitespace-pre-line text-sm text-gray-700"></div>
-    </div>
-  </div>
-
-  <script>
-    async function sendText(endpoint) {
-      const text = document.getElementById('blogText').value;
-      const res = await fetch(`/${endpoint}`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ text })
-      });
-      const data = await res.json();
-      document.getElementById('results').innerText = formatResult(data);
-    }
-
-    function formatResult(data) {
-      if (typeof data === 'string') return data;
-      if (Array.isArray(data)) return data.join(', ');
-      let output = '';
-      for (let key in data) {
-        output += `${key.replace(/_/g, ' ')}:\n`;
-        if (Array.isArray(data[key])) {
-          output += `- ${data[key].join('\n- ')}\n\n`;
-        } else {
-          output += `${data[key]}\n\n`;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Blog SEO Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f9f9f9;
         }
-      }
-      return output;
-    }
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #fff;
+            display: none;
+        }
+        .result-container ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .result-container ul li {
+            padding: 6px 0;
+        }
+        textarea {
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Smart Blog SEO Analyzer</h1>
+        
+        <div class="mb-4">
+            <textarea id="content" class="form-control" rows="8" placeholder="Paste or write your blog content here..."></textarea>
+        </div>
 
-    const analyzeSEO = () => sendText('analyze');
-    const suggestKeywords = () => sendText('keywords');
-    const suggestHeadings = () => sendText('headings');
-    const keywordPlacement = () => sendText('placement');
-    const seoTips = () => sendText('tips');
-  </script>
+        <div class="text-center mb-4">
+            <button id="analyzeBtn" class="btn btn-primary m-2">Analyze SEO</button>
+            <button id="keywordsBtn" class="btn btn-info m-2 text-white">Suggested Keywords</button>
+            <button id="headingsBtn" class="btn btn-success m-2">Suggested Headings</button>
+            <button id="tipsBtn" class="btn btn-warning m-2">SEO Tips</button>
+        </div>
+
+        <div id="seoResults" class="result-container">
+            <h4>SEO Analysis</h4>
+            <p><strong>Word Count:</strong> <span id="wordCount"></span></p>
+            <p><strong>Keyword Density:</strong></p>
+            <ul id="keywordDensity"></ul>
+        </div>
+
+        <div id="keywordsResults" class="result-container">
+            <h4>Suggested Keywords</h4>
+            <ul id="suggestedKeywords"></ul>
+        </div>
+
+        <div id="headingsResults" class="result-container">
+            <h4>Suggested Headings</h4>
+            <ul id="suggestedHeadings"></ul>
+        </div>
+
+        <div id="tipsResults" class="result-container">
+            <h4>SEO Tips</h4>
+            <ul id="seoTips"></ul>
+        </div>
+    </div>
+
+    <script>
+        function clearAllResults() {
+            document.getElementById("seoResults").style.display = "none";
+            document.getElementById("keywordsResults").style.display = "none";
+            document.getElementById("headingsResults").style.display = "none";
+            document.getElementById("tipsResults").style.display = "none";
+        }
+
+        function displaySeoResults(data) {
+            document.getElementById("seoResults").style.display = "block";
+            document.getElementById("wordCount").textContent = data.word_count;
+
+            let keywordDensityList = document.getElementById("keywordDensity");
+            keywordDensityList.innerHTML = '';
+            for (let keyword in data.keyword_density) {
+                let li = document.createElement("li");
+                li.textContent = `${keyword}: ${data.keyword_density[keyword].toFixed(2)}%`;
+                keywordDensityList.appendChild(li);
+            }
+        }
+
+        function displayKeywords(data) {
+            document.getElementById("keywordsResults").style.display = "block";
+            let list = document.getElementById("suggestedKeywords");
+            list.innerHTML = '';
+            data.suggested_keywords.forEach(keyword => {
+                let li = document.createElement("li");
+                li.textContent = keyword;
+                list.appendChild(li);
+            });
+        }
+
+        function displayHeadings(data) {
+            document.getElementById("headingsResults").style.display = "block";
+            let list = document.getElementById("suggestedHeadings");
+            list.innerHTML = '';
+            data.suggested_headings.forEach(heading => {
+                let li = document.createElement("li");
+                li.textContent = heading;
+                list.appendChild(li);
+            });
+        }
+
+        function displayTips(data) {
+            document.getElementById("tipsResults").style.display = "block";
+            let list = document.getElementById("seoTips");
+            list.innerHTML = '';
+            data.seo_tips.forEach(tip => {
+                let li = document.createElement("li");
+                li.textContent = tip;
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById("analyzeBtn").addEventListener("click", () => {
+            clearAllResults();
+            const content = document.getElementById("content").value;
+            fetch("/analyze", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: content })
+            })
+            .then(res => res.json())
+            .then(data => displaySeoResults(data))
+            .catch(err => console.error(err));
+        });
+
+        document.getElementById("keywordsBtn").addEventListener("click", () => {
+            clearAllResults();
+            const content = document.getElementById("content").value;
+            fetch("/keywords", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: content })
+            })
+            .then(res => res.json())
+            .then(data => displayKeywords(data))
+            .catch(err => console.error(err));
+        });
+
+        document.getElementById("headingsBtn").addEventListener("click", () => {
+            clearAllResults();
+            const content = document.getElementById("content").value;
+            fetch("/headings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: content })
+            })
+            .then(res => res.json())
+            .then(data => displayHeadings(data))
+            .catch(err => console.error(err));
+        });
+
+        document.getElementById("tipsBtn").addEventListener("click", () => {
+            clearAllResults();
+            fetch("/tips", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(res => res.json())
+            .then(data => displayTips(data))
+            .catch(err => console.error(err));
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
