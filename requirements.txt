@@ -1,4 +1,2 @@
-Flask==2.3.3
-gunicorn==21.2.0
-openai==1.14.3
-pytrends
+flask
+openai>=1.0.0
