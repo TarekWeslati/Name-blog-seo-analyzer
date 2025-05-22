@@ -2,25 +2,49 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>أداة الذكاء الاصطناعي</title>
+    <title>أداة فحص وتحسين سيو المقالات</title>
     <style>
-        body { font-family: Arial; margin: 50px; text-align: center; }
-        input[type="text"] { width: 70%; padding: 10px; font-size: 16px; }
-        button { padding: 10px 20px; font-size: 16px; }
-        .answer { margin-top: 30px; background: #f4f4f4; padding: 20px; border-radius: 8px; }
+        body { font-family: Arial; margin: 50px; text-align: right; background: #f0f0f0; }
+        textarea, input, button { width: 100%; padding: 10px; margin-top: 10px; }
+        button { font-size: 16px; }
+        .result { background: white; padding: 20px; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+        .tip { margin-bottom: 8px; }
     </style>
 </head>
 <body>
-    <h2>اكتب سؤالك للذكاء الاصطناعي</h2>
+    <h1>📊 أداة فحص وتحسين سيو المقالات</h1>
     <form method="post">
-        <input type="text" name="prompt" placeholder="مثال: ما هو الذكاء الاصطناعي؟" required>
-        <button type="submit">إرسال</button>
+        <label>🔍 الكلمة المفتاحية:</label>
+        <input type="text" name="keyword" required placeholder="مثال: الذكاء الاصطناعي">
+
+        <label>📝 المقال:</label>
+        <textarea name="article" rows="10" required placeholder="الصق هنا مقالك..."></textarea>
+
+        <label><input type="checkbox" name="improve"> ✅ تحسين المقال باستخدام الذكاء الاصطناعي (GPT-4)</label>
+
+        <button type="submit">تحليل المقال</button>
     </form>
 
-    {% if answer %}
-    <div class="answer">
-        <h3>الإجابة:</h3>
-        <p>{{ answer }}</p>
+    {% if analysis %}
+    <div class="result">
+        <h2>📈 نتائج التحليل:</h2>
+        <p>عدد الكلمات: {{ analysis.word_count }}</p>
+        <p>تكرار الكلمة المفتاحية: {{ analysis.keyword_count }}</p>
+        <p>كثافة الكلمة المفتاحية: {{ analysis.keyword_density }}%</p>
+        <p>عدد عناوين H1: {{ analysis.h1_count }}</p>
+        <p>عدد عناوين H2: {{ analysis.h2_count }}</p>
+
+        <h3>💡 نصائح:</h3>
+        {% for tip in analysis.tips %}
+            <div class="tip">{{ tip }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if improved_article %}
+    <div class="result">
+        <h2>✍️ المقال المحسّن:</h2>
+        <textarea rows="12" readonly>{{ improved_article }}</textarea>
     </div>
     {% endif %}
 </body>
