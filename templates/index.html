@@ -1,51 +1,37 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>أداة فحص وتحسين سيو المقالات</title>
-    <style>
-        body { font-family: Arial; margin: 50px; text-align: right; background: #f0f0f0; }
-        textarea, input, button { width: 100%; padding: 10px; margin-top: 10px; }
-        button { font-size: 16px; }
-        .result { background: white; padding: 20px; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-        .tip { margin-bottom: 8px; }
-    </style>
+    <title>AI Blog Article Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>📊 أداة فحص وتحسين سيو المقالات</h1>
-    <form method="post">
-        <label>🔍 الكلمة المفتاحية:</label>
-        <input type="text" name="keyword" required placeholder="مثال: الذكاء الاصطناعي">
-
-        <label>📝 المقال:</label>
-        <textarea name="article" rows="10" required placeholder="الصق هنا مقالك..."></textarea>
-
-        <label><input type="checkbox" name="improve"> ✅ تحسين المقال باستخدام الذكاء الاصطناعي (GPT-4)</label>
-
-        <button type="submit">تحليل المقال</button>
-    </form>
-
-    {% if analysis %}
-    <div class="result">
-        <h2>📈 نتائج التحليل:</h2>
-        <p>عدد الكلمات: {{ analysis.word_count }}</p>
-        <p>تكرار الكلمة المفتاحية: {{ analysis.keyword_count }}</p>
-        <p>كثافة الكلمة المفتاحية: {{ analysis.keyword_density }}%</p>
-        <p>عدد عناوين H1: {{ analysis.h1_count }}</p>
-        <p>عدد عناوين H2: {{ analysis.h2_count }}</p>
-
-        <h3>💡 نصائح:</h3>
-        {% for tip in analysis.tips %}
-            <div class="tip">{{ tip }}</div>
-        {% endfor %}
+    <div class="container">
+        <h1>🧠 AI Blog Article Analyzer</h1>
+        <form method="POST">
+            <textarea name="content" placeholder="Paste your full blog article here..." required></textarea>
+            <button type="submit">Analyze Article</button>
+        </form>
+        {% if result %}
+        <div class="result-box">
+            <h2>📝 Analysis Result</h2>
+            <pre>{{ result }}</pre>
+            <div class="buttons">
+                <button onclick="copyText()">📋 Copy Result</button>
+                <button onclick="alert('PDF export coming soon!')">📄 Download PDF</button>
+                <button onclick="shareResult()">🔗 Share</button>
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
-
-    {% if improved_article %}
-    <div class="result">
-        <h2>✍️ المقال المحسّن:</h2>
-        <textarea rows="12" readonly>{{ improved_article }}</textarea>
-    </div>
-    {% endif %}
+    <script>
+        function copyText() {
+            navigator.clipboard.writeText(document.querySelector('pre').innerText);
+            alert('Analysis copied!');
+        }
+        function shareResult() {
+            alert('Sharing feature will be added soon.');
+        }
+    </script>
 </body>
 </html>
