@@ -4,9 +4,11 @@ import os
 
 app = Flask(__name__)
 
+# إعداد مفتاح API من البيئة
 openai.api_key = os.getenv("OPENROUTER_API_KEY")
 openai.api_base = "https://openrouter.ai/api/v1"
 
+# النموذج التحليلي للمقال
 prompt_template = """
 You are an expert SEO and content analyst.
 Analyze the following blog article (in any language), and provide:
@@ -32,13 +34,18 @@ def index():
     if request.method == "POST":
         content = request.form["content"]
         if content:
-            response = openai.ChatCompletion.create(
-                model="openrouter/gpt-4-turbo",
-                messages=[
-                    {"role": "user", "content": prompt_template.format(content=content)}
-                ]
-            )
-            result = response.choices[0].message.content
+            try:
+                response = openai.ChatCompletion.create(
+                    model="openrouter/gpt-4-turbo",
+                    messages=[
+                        {"role": "user", "content": prompt_template.format(content=content)}
+                    ]
+                )
+                # قراءة النتيجة حسب بنية الاستجابة
+                result = response['choices'][0]['message']['content']
+            except Exception as e:
+                # عرض الخطأ مباشرة في الصفحة
+                result = f"❌ ERROR: {repr(e)}"
     return render_template("index.html", result=result)
 
 if __name__ == "__main__":
