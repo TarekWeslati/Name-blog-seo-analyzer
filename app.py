@@ -4,7 +4,7 @@ import openai
 app = Flask(__name__)
 
 # أدخل مفتاحك هنا مباشرة
-api_key = "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"
+api_key = "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 "
 
 client = openai.OpenAI(
     api_key=api_key,
