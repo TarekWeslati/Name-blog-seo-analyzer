@@ -4,8 +4,11 @@ import os
 
 app = Flask(__name__)
 
+# يدعم أي من المتغيرين (الأفضل وضع كليهما في بيئة Render)
+api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+
 client = openai.OpenAI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
+    api_key=api_key,
     base_url="https://openrouter.ai/api/v1"
 )
 
@@ -48,4 +51,3 @@ def index():
 
 if __name__ == "__main__":
     app.run(debug=True)
-    
