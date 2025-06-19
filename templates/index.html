@@ -15,7 +15,8 @@
         {% if result %}
         <div class="result-box">
             <h2>📝 Analysis Result</h2>
-            <pre>{{ result }}</pre>
+            <pre style="white-space: pre-wrap;">{{ result }}</pre>
+
             <div class="buttons">
                 <button onclick="copyText()">📋 Copy Result</button>
                 <button onclick="alert('PDF export coming soon!')">📄 Download PDF</button>
