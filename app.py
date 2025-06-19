@@ -1,11 +1,10 @@
 from flask import Flask, render_template, request
 import openai
-import os
 
 app = Flask(__name__)
 
-# يدعم أي من المتغيرين (الأفضل وضع كليهما في بيئة Render)
-api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+# أدخل مفتاحك هنا مباشرة
+api_key = "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"
 
 client = openai.OpenAI(
     api_key=api_key,
