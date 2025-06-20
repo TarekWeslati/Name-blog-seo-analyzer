@@ -1,38 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AI Blog Article Analyzer</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Blog Article Analyzer</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🧠 AI Blog Article Analyzer</h1>
-        <form method="POST">
-            <textarea name="content" placeholder="Paste your full blog article here..." required></textarea>
-            <button type="submit">Analyze Article</button>
-        </form>
-        {% if result %}
-        <div class="result-box">
-            <h2>📝 Analysis Result</h2>
-            <pre style="white-space: pre-wrap;">{{ result }}</pre>
+  <div class="container">
+    <h1>🧠 AI Blog Article Analyzer</h1>
+    <p class="subtitle">Analyze the quality, SEO, tone, and structure of any article using AI</p>
 
-            <div class="buttons">
-                <button onclick="copyText()">📋 Copy Result</button>
-                <button onclick="alert('PDF export coming soon!')">📄 Download PDF</button>
-                <button onclick="shareResult()">🔗 Share</button>
-            </div>
-        </div>
-        {% endif %}
+    <form method="POST">
+      <textarea name="content" placeholder="Paste your full blog article here..." required></textarea>
+      <button type="submit">🔍 Analyze Article</button>
+    </form>
+
+    {% if result %}
+    <div class="result-box">
+      <h2>📝 Analysis Result</h2>
+      <pre style="white-space: pre-wrap;">{{ result }}</pre>
+      <div class="buttons">
+        <button onclick="copyText()">📋 Copy Result</button>
+        <button onclick="alert('📄 PDF export coming soon!')">📄 Download PDF</button>
+        <button onclick="shareResult()">🔗 Share</button>
+      </div>
     </div>
-    <script>
-        function copyText() {
-            navigator.clipboard.writeText(document.querySelector('pre').innerText);
-            alert('Analysis copied!');
-        }
-        function shareResult() {
-            alert('Sharing feature will be added soon.');
-        }
-    </script>
+    {% endif %}
+  </div>
+
+  <script>
+    function copyText() {
+      navigator.clipboard.writeText(document.querySelector('pre').innerText);
+      alert('✅ Analysis copied to clipboard!');
+    }
+
+    function shareResult() {
+      alert('🔗 Sharing feature will be added soon.');
+    }
+  </script>
 </body>
 </html>
