@@ -1,16 +1,23 @@
 from flask import Flask, render_template, request
 import openai
+import os
 
 app = Flask(__name__)
 
-# أدخل مفتاحك هنا مباشرة
-api_key = "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 "
+# استخدام المفتاح من متغير بيئة
+api_key = os.getenv("OPENROUTER_API_KEY")
 
+# تحقق من وجود المفتاح
+if not api_key:
+    raise RuntimeError("❌ Missing OPENROUTER_API_KEY in environment variables.")
+
+# إعداد العميل
 client = openai.OpenAI(
     api_key=api_key,
     base_url="https://openrouter.ai/api/v1"
 )
 
+# النموذج التحليلي
 prompt_template = """
 You are an expert SEO and content analyst.
 Analyze the following blog article (in any language), and provide:
