@@ -1,23 +1,24 @@
-from flask import Flask, render_template, request
 import openai
 import os
+import sys
+from flask import Flask, render_template, request
+
+# تأكد من دعم UTF-8 لمنع مشاكل المفاتيح
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding='utf-8')
 
 app = Flask(__name__)
 
-# استخدام المفتاح من متغير بيئة
+# مفتاح API من البيئة
 api_key = os.getenv("OPENROUTER_API_KEY")
-
-# تحقق من وجود المفتاح
 if not api_key:
     raise RuntimeError("❌ Missing OPENROUTER_API_KEY in environment variables.")
 
-# إعداد العميل
 client = openai.OpenAI(
     api_key=api_key,
     base_url="https://openrouter.ai/api/v1"
 )
 
-# النموذج التحليلي
 prompt_template = """
 You are an expert SEO and content analyst.
 Analyze the following blog article (in any language), and provide:
@@ -46,9 +47,7 @@ def index():
             try:
                 response = client.chat.completions.create(
                     model="openrouter/gpt-4-turbo",
-                    messages=[
-                        {"role": "user", "content": prompt_template.format(content=content)}
-                    ]
+                    messages=[{"role": "user", "content": prompt_template.format(content=content)}]
                 )
                 result = response.choices[0].message.content
             except Exception as e:
