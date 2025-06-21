@@ -3,22 +3,24 @@ import os
 import sys
 from flask import Flask, render_template, request
 
-# تأكد من دعم UTF-8 لمنع مشاكل المفاتيح
+# تأكد من ترميز UTF-8 لتجنب مشاكل الترميز
 sys.stdin.reconfigure(encoding='utf-8')
 sys.stdout.reconfigure(encoding='utf-8')
 
 app = Flask(__name__)
 
-# مفتاح API من البيئة
-api_key = os.getenv("OPENROUTER_API_KEY")
+# قراءة وتنظيف مفتاح OpenRouter API
+api_key = os.getenv("OPENROUTER_API_KEY", "").strip().replace('\u200e', '')
 if not api_key:
-    raise RuntimeError("❌ Missing OPENROUTER_API_KEY in environment variables.")
+    raise RuntimeError("❌ Missing or invalid OPENROUTER_API_KEY.")
 
+# إعداد الاتصال بـ OpenRouter API
 client = openai.OpenAI(
     api_key=api_key,
     base_url="https://openrouter.ai/api/v1"
 )
 
+# نموذج الطلب المرسل لتحليل المقال
 prompt_template = """
 You are an expert SEO and content analyst.
 Analyze the following blog article (in any language), and provide:
