@@ -3,24 +3,24 @@ import os
 import sys
 from flask import Flask, render_template, request
 
-# تأكد من ترميز UTF-8 لتجنب مشاكل الترميز
+# تأكد من ترميز UTF-8 لتفادي مشاكل الترميز
 sys.stdin.reconfigure(encoding='utf-8')
 sys.stdout.reconfigure(encoding='utf-8')
 
 app = Flask(__name__)
 
-# قراءة وتنظيف مفتاح OpenRouter API
+# تنظيف المفتاح من الأحرف المخفية
 api_key = os.getenv("OPENROUTER_API_KEY", "").strip().replace('\u200e', '')
 if not api_key:
     raise RuntimeError("❌ Missing or invalid OPENROUTER_API_KEY.")
 
-# إعداد الاتصال بـ OpenRouter API
+# إعداد الاتصال بـ OpenRouter
 client = openai.OpenAI(
     api_key=api_key,
     base_url="https://openrouter.ai/api/v1"
 )
 
-# نموذج الطلب المرسل لتحليل المقال
+# نموذج تحليل المقال
 prompt_template = """
 You are an expert SEO and content analyst.
 Analyze the following blog article (in any language), and provide:
@@ -48,8 +48,10 @@ def index():
         if content:
             try:
                 response = client.chat.completions.create(
-                    model="openrouter/gpt-4-turbo",
-                    messages=[{"role": "user", "content": prompt_template.format(content=content)}]
+                    model="mistralai/mistral-7b-instruct",
+                    messages=[
+                        {"role": "user", "content": prompt_template.format(content=content)}
+                    ]
                 )
                 result = response.choices[0].message.content
             except Exception as e:
